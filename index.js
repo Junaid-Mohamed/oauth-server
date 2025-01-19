@@ -1,18 +1,51 @@
-// Ov23liwmIxm2EZzA8es9 - client id
-// f0e0846f4306acb1dc6190994e6747d242707152 - client secret
-
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 require("dotenv").config();
+const cookieParser = require("cookie-parser")
+const {setSecureCookie} = require("./services/index.js")
+const {verifyAccessToken} = require("./middleware/index.js")
 
 const PORT = process.env.PORT | 4000;
 
 const app = express();
-app.use(cors());
+app.use(cors({credentials: true, origin: "http://localhost:3000"}));
+app.use(cookieParser());
 
 app.get('/',(req,res)=>{
     res.send('<h1>Welcome to OAuth API Server</h1>')
+})
+
+app.get("/user/profile/github",verifyAccessToken ,async(req,res)=>{
+    try{
+        const {access_token} = req.cookies;
+        const githubUserDataResponse = await axios.get('https://api.github.com/user', 
+            {
+                headers: {
+                    Authorization: `Bearer ${access_token}`
+                }
+            }
+        )
+        res.json({user:githubUserDataResponse.data});
+    }catch(error){
+        res.status(500).json({error: "Could not fetch user Github profile."})
+    }
+})
+
+app.get("/user/profile/google",verifyAccessToken ,async(req,res)=>{
+    try{
+        const {access_token} = req.cookies;
+        const googleUserDataResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', 
+            {
+                headers: {
+                    Authorization: `Bearer ${access_token}`
+                }
+            }
+        )
+        res.json({user:googleUserDataResponse.data});
+    }catch(error){
+        res.status(500).json({error: "Could not fetch user Google profile."})
+    }
 })
 
 app.get('/auth/github',(req,res)=>{
@@ -22,6 +55,9 @@ app.get('/auth/github',(req,res)=>{
 
 app.get('/auth/github/callback',async(req,res)=>{
     const {code} = req.query;
+    if(!code){
+        return res.status(400).send('Authorization code not provided.')
+       } 
     try{
         const tokenResponse = await axios.post(`https://github.com/login/oauth/access_token`,
             {
@@ -34,18 +70,16 @@ app.get('/auth/github/callback',async(req,res)=>{
             }
         )
         const accessToken = tokenResponse.data.access_token;
-        res.cookie('access_token',accessToken); // will set cookie in the client.
-        return res.redirect(`${process.env.FRONTEND_URL}/v1/profile/github`)
+        setSecureCookie(res,accessToken)
+        // res.cookie('access_token',accessToken); // will set cookie in the client.
+        return res.redirect(`${process.env.FRONTEND_URL}/v2/profile/github`)
     }catch(error){
         res.status(500).json(error)
     }
 })
 
 app.get('/auth/google', (req,res)=>{
-    console.log("inside req")
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}
-    &redirect_uri=http://localhost:4000/auth/google/callback&response_type=code&scope=profile email`
-    console.log(googleAuthUrl);
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=http://localhost:${PORT}/auth/google/callback&response_type=code&scope=profile email`
     // res.send("hi");
     res.redirect(googleAuthUrl);
 })
@@ -72,8 +106,9 @@ app.get('/auth/google/callback',async(req,res)=>{
     },
     )
     access_token = tokenResponse.data.access_token;
-    res.cookie("access_token",access_token);
-    return res.redirect(`${process.env.FRONTEND_URL}/v1/profile/google`)
+    setSecureCookie(res,access_token);
+    // res.cookie("access_token",access_token);
+    return res.redirect(`${process.env.FRONTEND_URL}/v2/profile/google`)
     }catch(error){
         console.error(error)
     }
