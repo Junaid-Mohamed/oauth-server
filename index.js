@@ -108,7 +108,7 @@ app.get('/auth/google/callback',async(req,res)=>{
     access_token = tokenResponse.data.access_token;
     setSecureCookie(res,access_token);
     // res.cookie("access_token",access_token);
-    return res.redirect(`https://oauth-server-brown.vercel.app/v2/profile/google`)
+    return res.redirect(`https://oauth-frontend.vercel.app/v2/profile/google`)
     }catch(error){
         console.error(error)
     }
