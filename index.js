@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 const PORT = process.env.PORT | 4000;
 
 const app = express();
-app.use(cors({credentials: true, origin: ["https://oauth-frontend.vercel.app","http://localhost:3000"]}));
+app.use(cors({credentials: true, origin: ["https://oauth-frontend.vercel.app","https://memories-fe-pi.vercel.app","http://localhost:3000"]}));
 app.use(cookieParser());
 
 app.get('/',(req,res)=>{
