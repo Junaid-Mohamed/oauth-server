@@ -70,6 +70,7 @@ app.get('/auth/github/callback',async(req,res)=>{
             }
         )
         const accessToken = tokenResponse.data.access_token;
+
         setSecureCookie(res,accessToken)
         // res.cookie('access_token',accessToken); // will set cookie in the client.
         return res.redirect(`${process.env.FRONTEND_URL}/v2/profile/github`)
@@ -79,12 +80,12 @@ app.get('/auth/github/callback',async(req,res)=>{
 })
 
 app.get('/auth/google', (req,res)=>{
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=https://oauth-server-brown.vercel.app/auth/google/callback&response_type=code&scope=profile email`
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=https://oauth-server-brown.vercel.app/api/auth/google/callback&response_type=code&scope=profile email`
     // res.send("hi");
     res.redirect(googleAuthUrl);
 })
 
-app.get('/auth/google/callback',async(req,res)=>{
+app.get('/api/auth/google/callback',async(req,res)=>{
     const {code} = req.query;
     if(!code){
         return res.status(400).send('Authorization code not provided.')
@@ -97,7 +98,7 @@ app.get('/auth/google/callback',async(req,res)=>{
             client_secret: process.env.GOOGLE_CLIENT_SECRET,
             code,
             grant_type: "authorization_code",
-            redirect_uri: `https://oauth-server-brown.vercel.app/auth/google/callback`
+            redirect_uri: `https://oauth-server-brown.vercel.app/api/auth/google/callback`
         },
         {
         headers: {
@@ -107,6 +108,13 @@ app.get('/auth/google/callback',async(req,res)=>{
     )
     access_token = tokenResponse.data.access_token;
     setSecureCookie(res,access_token);
+    const googleUserDataResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', 
+        {
+            headers: {
+                Authorization: `Bearer ${access_token}`
+            }
+        }
+    )
     // res.cookie("access_token",access_token);
     return res.redirect(`https://oauth-frontend.vercel.app/v2/profile/google`)
     }catch(error){
