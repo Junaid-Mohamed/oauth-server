@@ -124,7 +124,8 @@ app.get('/api/auth/google/callback',async(req,res)=>{
     const jwtToken = await jwt.sign({id,email,name,picture},process.env.JWT_SECRET,{expiresIn:"12h"})
     setSecureCookie(res,jwtToken);
     // res.cookie("access_token",access_token);
-    return res.redirect(`${process.env.FRONTEND_URL}/v2/profile/google`)
+    // return res.redirect(`${process.env.FRONTEND_URL}/v2/profile/google`)
+    return res.redirect(`https://memories-fe-pi.vercel.app`)
     }catch(error){
         console.error(error)
     }
