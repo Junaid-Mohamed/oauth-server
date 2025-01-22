@@ -125,7 +125,7 @@ app.get('/api/auth/google/callback',async(req,res)=>{
     setSecureCookie(res,jwtToken);
     // res.cookie("access_token",access_token);
     // return res.redirect(`${process.env.FRONTEND_URL}/v2/profile/google`)
-    return res.redirect(`https://memories-fe-pi.vercel.app`)
+    return res.redirect(`${process.env.FRONTEND_URL}`)
     }catch(error){
         console.error(error)
     }
